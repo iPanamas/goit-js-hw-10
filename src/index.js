@@ -21,25 +21,29 @@ import { alertTooManyMatches } from './js/notification';
 // Reference
 import { refs } from './js/refs';
 
-export function onCountryInput() {
+refs.countryInput.addEventListener('input', _.debounce(onCountryInput, DEBOUNCE_DELAY));
+
+async function onCountryInput() {
   const inputValue = refs.countryInput.value.trim();
 
   if (inputValue === '') {
     return (refs.countryList.innerHTML = ''), (refs.countryInfo.innerHTML = '');
   }
 
-  fetchCountries(inputValue)
-    .then(countries => {
-      refs.countryList.innerHTML = '';
-      refs.countryInfo.innerHTML = '';
-      if (countries.length === 1) {
-        refs.countryInfo.insertAdjacentHTML('beforeend', renderCountryInfo(countries));
-      } else if (countries.length >= 10) {
-        alertTooManyMatches();
-      } else {
-        refs.countryList.insertAdjacentHTML('beforeend', renderCountryList(countries));
-      }
-    })
-    .catch(alertWrongName);
+  const responseCountry = await fetchCountries(inputValue);
+
+  try {
+    refs.countryList.innerHTML = '';
+    refs.countryInfo.innerHTML = '';
+    if (responseCountry.length === 1) {
+      refs.countryInfo.insertAdjacentHTML('beforeend', renderCountryInfo(responseCountry));
+    } else if (responseCountry.length >= 10) {
+      alertTooManyMatches();
+    } else {
+      refs.countryList.insertAdjacentHTML('beforeend', renderCountryList(responseCountry));
+    }
+  } catch (error) {
+    console.log(error);
+    alertWrongName();
+  }
 }
-refs.countryInput.addEventListener('input', _.debounce(onCountryInput, DEBOUNCE_DELAY));
